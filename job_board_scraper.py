@@ -200,10 +200,11 @@ def main():
 
     today = datetime.now().strftime("%Y%m%d")
 
+    # Make a list to store text that will be written to a file to save
+    # a summary of new jobs found today
+    new_jobs_file_text = []
+
     for company in jobs_dict:
-        # Make a list to store text that will be written to a file to save
-        # a summary of new jobs found today
-        new_jobs_file_text = []
         try:
             with open(f".{company}", 'r') as old_file:
                 old_jobs = old_file.read().splitlines()
