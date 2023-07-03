@@ -1,5 +1,13 @@
-# anything hidden
-.*
+# company files
+.hrt
+.deshaw
+.js
+.tower
+.millennium
+.aqr
+.squarepoint
+.iex
+.p72
 
 # other specific stuff
 geckodriver.log
