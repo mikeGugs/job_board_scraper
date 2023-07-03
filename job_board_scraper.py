@@ -1,10 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import os
 from datetime import datetime
 import time
 
@@ -79,6 +77,8 @@ def get_js_jobs():
     """Jane Street"""
     js_url = 'https://www.janestreet.com/join-jane-street/open-roles/?type=experienced-candidates&location=new-york'
     webdriver = webdriver_response(js_url)
+    # Wait for jobs to load
+    time.sleep(2)
     elements = webdriver.find_elements('xpath', '//div[@class="item experienced position"]')
     jobs = [element.text.strip() for element in elements if element.text.strip()]
     webdriver.close()
@@ -88,6 +88,8 @@ def get_tower_jobs():
     """Tower Research Capital"""
     tower_url = 'https://www.tower-research.com/open-positions'
     webdriver = webdriver_response(tower_url)
+    # Wait for page to load
+    time.sleep(2)
     frame = webdriver.find_element('xpath', '//*[@id="grnhse_iframe"]')
     webdriver.switch_to.frame(frame)
     soup = BeautifulSoup(webdriver.page_source, 'html.parser')
@@ -97,6 +99,84 @@ def get_tower_jobs():
     webdriver.close()
     return jobs
 
+def get_millennium_jobs():
+    """Millennium Management"""
+    millennium_url = 'https://www.mlp.com/job-listings/'
+    m_driver = webdriver_response(millennium_url)
+
+    # Try to wait until cookie tracker acceptance button is clickable
+    time.sleep(2)
+
+    # Again wait for cookie tracker. Maybe this isn't needed?
+    WebDriverWait(m_driver, 10).until(
+        EC.element_to_be_clickable(('xpath', '//*[@id="global_cookie_policy"]/div/div/a')))
+    # Accept cookie-tracker
+    accept_button = m_driver.find_element('xpath', '//*[@id="global_cookie_policy"]/div/div/a')
+    accept_button.click()
+
+    m_driver.find_element('xpath', '/html/body/div[4]/main/div/div/section/div')
+
+    m_soup = BeautifulSoup(m_driver.page_source, 'html.parser')
+    jobs = []
+    for job_element in m_soup.find_all('li', {'class': 'page-section__content--list-container'}):
+        if 'New York' in job_element.text:
+            jobs.append(job_element.text.strip().split('\n')[0])
+    m_driver.close()
+
+    return jobs
+
+def get_aqr_jobs():
+    aqr_url = 'https://careers.aqr.com/jobs/city/greenwich#/'
+    aqr_driver = webdriver_response(aqr_url)
+    aqr_soup = BeautifulSoup(aqr_driver.page_source, 'html.parser')
+    greenwich_jobs = aqr_soup.find_all('td', {'class': 'col-sm-6'})
+    # 'td' tags are pairs, one for job and the next for department. [::2] skips
+    # every other index in the greenwich_jobs list starting at index 1, because
+    # those are all departments. After this we are left with only job titles.
+    greenwich_jobs = [job.text.strip() for job in greenwich_jobs if job.text.strip()][::2]
+    aqr_driver.close()
+    return greenwich_jobs
+
+
+def get_squarepoint_jobs():
+    sqp_url = 'https://www.squarepoint-capital.com/careers#s4'
+    sqp_driver = webdriver_response(sqp_url)
+    sqp_soup = BeautifulSoup(sqp_driver.page_source, 'html.parser')
+    sqp_jobs = sqp_soup.find_all('p', {'class': 'positionName'})
+    sqp_locations = sqp_soup.find_all('p', {'class': 'positionLocation'})
+    if len(sqp_jobs) != len(sqp_locations):
+        raise IndexError("The amount of job and location tags for Squarepoint do not equal!"
+                         " They probably added a job without a corresponding location.")
+    sqp_jobs_w_locations = [(job.text, location.text) for job, location in zip(sqp_jobs, sqp_locations)]
+    ny_jobs = [job[0].strip() for job in sqp_jobs_w_locations if 'New York' in job[1]]
+    sqp_driver.close()
+    return ny_jobs
+
+def get_iex_jobs():
+    iex_url = 'https://www.iex.io/careers#open-roles'
+    iex_driver = webdriver_response(iex_url)
+    # Wait for jobs to load
+    time.sleep(2)
+    iex_soup = BeautifulSoup(iex_driver.page_source, 'html.parser')
+    jobs = iex_soup.find_all('div', {'fs-cmsfilter-field': 'title',
+                                     'data-js': 'title'})
+    jobs = [job.text.strip() for job in jobs]
+    iex_driver.close()
+    return jobs
+
+def get_p72_jobs():
+    p72_url = 'https://careers.point72.com/?location=new%20york'
+    p72_driver = webdriver_response(p72_url)
+    # Wait for jobs to load
+    time.sleep(2)
+    p72_soup = BeautifulSoup(p72_driver.page_source, 'html.parser')
+    jobs = p72_soup.find_all('a', {'class': 'searchSite'})
+    jobs = [job.text.strip() for job in jobs]
+    p72_driver.close()
+
+    return jobs
+
+
 def main():
     jobs_dict = {'hrt': {'company_name': 'Hudson River Trading',
                          'todays_jobs': get_hrt_jobs()},
@@ -105,11 +185,25 @@ def main():
                  'js': {'company_name': 'Jane Street',
                         'todays_jobs': get_js_jobs()},
                  'tower': {'company_name': 'Tower Research Capital',
-                           'todays_jobs': get_tower_jobs()}}
+                           'todays_jobs': get_tower_jobs()},
+                 'millennium': {'company_name': 'Millennium',
+                                'todays_jobs': get_millennium_jobs()},
+                 'aqr': {'company_name': 'AQR',
+                         'todays_jobs': get_aqr_jobs()},
+                 'squarepoint': {'company_name': 'Sqaurepoint',
+                                 'todays_jobs': get_squarepoint_jobs()},
+                 'iex': {'company_name': "IEX",
+                         'todays_jobs': get_iex_jobs()},
+                 'p72': {'company_name': 'Point 72',
+                         'todays_jobs': get_p72_jobs()}
+                 }
 
     today = datetime.now().strftime("%Y%m%d")
 
     for company in jobs_dict:
+        # Make a list to store text that will be written to a file to save
+        # a summary of new jobs found today
+        new_jobs_file_text = []
         try:
             with open(f".{company}", 'r') as old_file:
                 old_jobs = old_file.read().splitlines()
@@ -119,33 +213,43 @@ def main():
             new_jobs = []
             with open(f".{company}", 'w') as new_file:
                 new_file.write(f"{today}\n")
+                if not jobs_dict[company]['todays_jobs']:
+                    print(f"WARNING: picked up 0 jobs for {company}. Maybe check again.\n")
                 for job in jobs_dict[company]['todays_jobs']:
                     if job not in old_jobs:
                         new_jobs.append(job)
                     new_file.write(f"{job}\n")
 
-            print(f"{len(new_jobs)} new jobs for {jobs_dict[company]['company_name']} on {today}. You last "
-                  f"checked {days_between} days ago.")
-            for job in enumerate(new_jobs):
-                print(f"\t-{job[0]}) {job[1]}\n")
+            # Print new jobs to the terminal
+            new_jobs_str = (f"{len(new_jobs)} new jobs for {jobs_dict[company]['company_name']} on {today}. You last "
+                            f"checked {days_between} days ago.\n")
+            print(new_jobs_str)
+            new_jobs_file_text.append(new_jobs_str)
+            for job in enumerate(new_jobs, 1):
+                new_jobs_for_co = f"\t-{job[0]}) {job[1]}\n"
+                print(new_jobs_for_co)
+                new_jobs_file_text.append(new_jobs_for_co)
 
         except FileNotFoundError:
-            print(f"Looks like this is the first day you're checking for "
-                  f"{jobs_dict[company]['company_name']}. Writing jobs to file. "
-                  "Check back tomorrow for new jobs!")
+            new_co_string = f"Looks like this is the first day you're checking for " \
+                            f"{jobs_dict[company]['company_name']}. Writing {len(jobs_dict[company]['todays_jobs'])} jobs to file. " \
+                            "Check back tomorrow for new jobs!\n"
+            # Print that this is a new company to the terminal
+            print(new_co_string)
+            # Write each companies job listings so program has something to compare against
+            # on the next day it is run.
+            new_jobs_file_text.append(new_co_string)
             with open(f".{company}", "w") as new_file:
                 new_file.write(f"{today}\n")
                 for job in jobs_dict[company]['todays_jobs']:
                     new_file.write(f"{job}\n")
 
-
-
+    # Write new jobs to new_jobs file. Rewritten every time this program is run.
+    with open("new_jobs", 'w') as new_jobs_file:
+        new_jobs_file.write(f"New jobs as of {today}:\n")
+        for row in new_jobs_file_text:
+            new_jobs_file.write(row)
 
 
 if __name__ == "__main__":
     main()
-
-
-    # USE OS TO CHECK IF DIR EXISTS, IF NOT THEN MAKE IT (TO HOLD FILE FOR EACH CO)
-
-
