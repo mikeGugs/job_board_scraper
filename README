@@ -1,0 +1,12 @@
+This program scrapes hedge funds/ trading companies/ asset managers/ etc. careers page
+with the goal of automating the process of scanning for newly posted jobs.
+
+The first time you run this, it will simply create hidden files with the pattern .<company_abbreviation>
+for each company containing all of the jobs on their careers page. The next time you run it, it will 
+compare the jobs returned from the new scrape to the old hidden files, and print any new jobs for each
+company to the terminal. It will also create a file in the directory, in the directory in which you ran
+the program, called 'new_jobs'. This new file will contain the exact text that's printed to the terminal,
+and it will be re-written each time you run the program.
+
+I am going to be consistently adding new companies to this, and may add new functionality/ features
+as I come up with them/ develop them.
