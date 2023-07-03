@@ -1,3 +1,14 @@
+# anything hidden
+.*
+
+# other specific stuff
+geckodriver.log
+strach.py
+new_jobs
+
+# Note for myself:
+# BELOW IS STANDARD PYTHON PATTERN - CAME PRE-FILLED. MAY WANT TO REMOVE AT SOME POINT
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
