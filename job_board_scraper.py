@@ -176,6 +176,43 @@ def get_p72_jobs():
 
     return jobs
 
+def get_citsec_jobs():
+    citsec_url = 'https://www.citadelsecurities.com/careers/open-opportunities/positions-for-professionals/'
+    citsec_driver = webdriver_response(citsec_url)
+    # Wait for page to load
+    time.sleep(2)
+    citsec_soup = BeautifulSoup(citsec_driver.page_source, 'html.parser')
+
+    locations = citsec_soup.find_all('div', {"class": 'careers-listing-card__location'})
+    locations = [location.text.strip() for location in locations]
+
+    jobs = citsec_soup.find_all('div', {'class': 'careers-listing-card__title'})
+    jobs = [job.text.strip() for job in jobs]
+
+    jobs_w_loc = zip(jobs, locations)
+
+    nyc_jobs = [job[0] for job in jobs_w_loc if 'New York' in job[1]]
+
+    citsec_driver.close()
+
+    return nyc_jobs
+
+def get_xtx_jobs():
+    xtx_url = 'https://www.xtxmarkets.com'
+    xtx_driver = webdriver_response(xtx_url)
+    # Wait for page to load
+    time.sleep(2)
+    xtx_soup = BeautifulSoup(xtx_driver.page_source, 'html.parser')
+    nyc_jobs = xtx_soup.find_all('li', {'class': 'opening_job_item active',
+                                        'data-tabs': "NEW YORK"})
+    nyc_job_titles = [job.find('div', {'class': 'title'}) for job in nyc_jobs]
+    
+    nyc_job_titles = [job.text.strip() for job in nyc_job_titles]
+
+    xtx_driver.close()
+
+    return nyc_job_titles
+
 
 def main():
     jobs_dict = {'hrt': {'company_name': 'Hudson River Trading',
@@ -195,7 +232,11 @@ def main():
                  'iex': {'company_name': "IEX",
                          'todays_jobs': get_iex_jobs()},
                  'p72': {'company_name': 'Point 72',
-                         'todays_jobs': get_p72_jobs()}
+                         'todays_jobs': get_p72_jobs()},
+                 'citsec': {'company_name': 'Citadel Securities',
+                            'todays_jobs': get_citsec_jobs()},
+                 'xtx': {'company_name': 'XTX Markets',
+                         'todays_jobs': get_xtx_jobs()}
                  }
 
     today = datetime.now().strftime("%Y%m%d")

@@ -4,9 +4,19 @@ with the goal of automating the process of scanning for newly posted jobs.
 The first time you run this, it will simply create hidden files with the pattern .<company_abbreviation>
 for each company containing all of the jobs on their careers page. The next time you run it, it will 
 compare the jobs returned from the new scrape to the old hidden files, and print any new jobs for each
-company to the terminal. It will also create a file in the directory, in the directory in which you ran
+company to the terminal. It will also create a file in the directory in which you ran
 the program, called 'new_jobs'. This new file will contain the exact text that's printed to the terminal,
 and it will be re-written each time you run the program.
 
 I am going to be consistently adding new companies to this, and may add new functionality/ features
 as I come up with them/ develop them.
+
+You will need to download the Firefox webdriver, geckodriver, into your $PATH. I put mine in /usr/bin. See below:
+https://github.com/mozilla/geckodriver/releases
+
+
+Known issues:
+	1) Sometimes the D.E. Shaw website will hang and this program wont be able to click the buttons it needs to.
+	This happens especially when you run this program more than once in quick succession. If this happens, try 
+	to simply rerun the program in a few seconds. If you ran the program more than once, then a waiting a 
+	longer period in between reruns might be helpful.
