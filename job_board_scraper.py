@@ -92,11 +92,15 @@ def get_tower_jobs():
     time.sleep(2)
     frame = webdriver.find_element('xpath', '//*[@id="grnhse_iframe"]')
     webdriver.switch_to.frame(frame)
+
     soup = BeautifulSoup(webdriver.page_source, 'html.parser')
     elements = soup.find_all('div', {'class': 'opening',
                                  'data-office-1249': 'true'})
+
     jobs = [job.find('a').text.strip() for job in elements if job.find('a').text.strip()]
+
     webdriver.close()
+
     return jobs
 
 def get_millennium_jobs():
@@ -128,28 +132,36 @@ def get_millennium_jobs():
 def get_aqr_jobs():
     aqr_url = 'https://careers.aqr.com/jobs/city/greenwich#/'
     aqr_driver = webdriver_response(aqr_url)
+
     aqr_soup = BeautifulSoup(aqr_driver.page_source, 'html.parser')
     greenwich_jobs = aqr_soup.find_all('td', {'class': 'col-sm-6'})
     # 'td' tags are pairs, one for job and the next for department. [::2] skips
     # every other index in the greenwich_jobs list starting at index 1, because
     # those are all departments. After this we are left with only job titles.
+
     greenwich_jobs = [job.text.strip() for job in greenwich_jobs if job.text.strip()][::2]
     aqr_driver.close()
+
     return greenwich_jobs
 
 
 def get_squarepoint_jobs():
     sqp_url = 'https://www.squarepoint-capital.com/careers#s4'
     sqp_driver = webdriver_response(sqp_url)
+
     sqp_soup = BeautifulSoup(sqp_driver.page_source, 'html.parser')
     sqp_jobs = sqp_soup.find_all('p', {'class': 'positionName'})
     sqp_locations = sqp_soup.find_all('p', {'class': 'positionLocation'})
+
     if len(sqp_jobs) != len(sqp_locations):
         raise IndexError("The amount of job and location tags for Squarepoint do not equal!"
                          " They probably added a job without a corresponding location.")
+
     sqp_jobs_w_locations = [(job.text, location.text) for job, location in zip(sqp_jobs, sqp_locations)]
     ny_jobs = [job[0].strip() for job in sqp_jobs_w_locations if 'New York' in job[1]]
+
     sqp_driver.close()
+
     return ny_jobs
 
 def get_iex_jobs():
@@ -206,12 +218,42 @@ def get_xtx_jobs():
     nyc_jobs = xtx_soup.find_all('li', {'class': 'opening_job_item active',
                                         'data-tabs': "NEW YORK"})
     nyc_job_titles = [job.find('div', {'class': 'title'}) for job in nyc_jobs]
-    
+
     nyc_job_titles = [job.text.strip() for job in nyc_job_titles]
 
     xtx_driver.close()
 
     return nyc_job_titles
+
+def get_worldquant_jobs():
+    wq_url = 'https://www.worldquant.com/career-listing/?location=new-york-united-states&department='
+    wq_driver = webdriver_response(wq_url)
+    # Wait for page to load
+    time.sleep(2)
+
+    wq_soup = BeautifulSoup(wq_driver.page_source, 'html.parser')
+
+    jobs = wq_soup.find_all('a', {'class': 'fo-link'})
+
+    job_titles = [job.find('h4', {'class': 'h4'}) for job in jobs]
+    job_titles = [job.text.strip() for job in job_titles]
+
+    job_locations = [loc.find('div', {'class': 'fo-zone'}) for loc in jobs]
+    job_locations = [loc.text.strip() for loc in job_locations]
+
+    job_w_loc = zip(job_titles, job_locations)
+
+    ny_jobs = []
+    for job in job_w_loc:
+        # Some jobs location tag says "Multiple Locations", but the class
+        # specifies all of the cities the job can be in. It likely would include
+        # New York, but would need to check the website.
+        if 'New York' in job[1] or 'Multiple Locations' in job[1]:
+            ny_jobs.append(job[0].strip())
+
+    wq_driver.close()
+
+    return ny_jobs
 
 
 def main():
@@ -236,7 +278,9 @@ def main():
                  'citsec': {'company_name': 'Citadel Securities',
                             'todays_jobs': get_citsec_jobs()},
                  'xtx': {'company_name': 'XTX Markets',
-                         'todays_jobs': get_xtx_jobs()}
+                         'todays_jobs': get_xtx_jobs()},
+                 'worldquant': {'company_name': 'Worldquant',
+                                'todays_jobs': get_worldquant_jobs()}
                  }
 
     today = datetime.now().strftime("%Y%m%d")
@@ -294,4 +338,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    get_worldquant_jobs()
