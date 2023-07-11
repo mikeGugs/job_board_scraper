@@ -297,14 +297,16 @@ def main():
                 days_between = (datetime.strptime(last_check_date, "%Y%m%d") - datetime.strptime(today, "%Y%m%d")).days
                 days_between = days_between * -1 if days_between < 0 else days_between
             new_jobs = []
-            with open(f".{company}", 'w') as new_file:
-                new_file.write(f"{today}\n")
-                if not jobs_dict[company]['todays_jobs']:
-                    print(f"WARNING: picked up 0 jobs for {company}. Maybe check again.\n")
-                for job in jobs_dict[company]['todays_jobs']:
-                    if job not in old_jobs:
-                        new_jobs.append(job)
-                    new_file.write(f"{job}\n")
+            # Only write to jobs file if program correctly loaded jobs from careers page
+            if jobs_dict[company]['todays_jobs']:
+                with open(f".{company}", 'w') as new_file:
+                    new_file.write(f"{today}\n")
+                    for job in jobs_dict[company]['todays_jobs']:
+                        if job not in old_jobs:
+                            new_jobs.append(job)
+                        new_file.write(f"{job}\n")
+            else:
+                print(f"WARNING: picked up 0 jobs for {company}. Not writing new file for {company}.\n")
 
             # Print new jobs to the terminal
             new_jobs_str = (f"{len(new_jobs)} new jobs for {jobs_dict[company]['company_name']} on {today}. You last "
