@@ -36,7 +36,7 @@ def get_deshaw_jobs():
     # Wait until page scrolls down and job-board loads
     WebDriverWait(webdriver, 30).until(EC.invisibility_of_element_located(('xpath',
                                                                    "//*[@id='TemplateTransitionLayer']")))
-    # Wait cookie-tracker loads
+    # Wait until cookie-tracker loads
     WebDriverWait(webdriver, 10).until(
         EC.element_to_be_clickable(('xpath', '//*[@id="LAYER_COOKIE"]/section/div/div')))
     # Accept cookie-tracker
@@ -255,6 +255,77 @@ def get_worldquant_jobs():
 
     return ny_jobs
 
+def get_pdt_jobs():
+    pdt_url = 'https://pdtpartners.com/careers'
+    pdt_soup = soupify_response(pdt_url)
+    jobs = pdt_soup.find_all('div', {'class': 'job'})
+    job_titles = [job.find('a').text.strip() for job in jobs]
+    return job_titles
+
+def get_bam_jobs():
+    bam_url = 'https://bambusdev.my.site.com/s/'
+    bam_driver = webdriver_response(bam_url)
+    time.sleep(2)
+    bam_soup = BeautifulSoup(bam_driver.page_source, 'html.parser')
+
+    jobs = bam_soup.find_all('p', {'class': 'jobRequisitionName'})
+    jobs = [job.text for job in jobs]
+
+    locations = bam_soup.find_all('p', {'class': 'jobRequisitionInformation'})
+    locations = [loc.text for loc in locations]
+
+    jobs_w_loc = zip(jobs, locations)
+
+    ny_jobs = []
+    for job in jobs_w_loc:
+        # It is possible that "X Locations" will return jobs not in NY.
+        # There doesn't seem to be a clear way to isolate NY if there are
+        # multiple locations available.
+        if 'New York' in job[1] or 'Locations' in job[1]:
+            ny_jobs.append(job[0])
+
+    bam_driver.close()
+
+    return ny_jobs
+
+def get_rentec_jobs():
+    rentec_url = 'https://www.rentec.com/Careers.action?jobs=true'
+    rentec_soup = soupify_response(rentec_url)
+    rentec_jobs = rentec_soup.find_all('div', {'class': 'flex-auto'})
+    jobs = [job.text.strip() for job in rentec_jobs if "Privacy Policy" not in job.text.strip()]
+    return jobs
+
+def get_two_sigma_jobs():
+    ts_url = 'https://careers.twosigma.com/careers/SearchJobs/?locationSearch=233%7C%7CNew%20York%7CNew%20York&listFilterMode=1&jobOffset=0'
+    ts_driver = webdriver_response(ts_url)
+    time.sleep(2)
+    ts_soup = BeautifulSoup(ts_driver.page_source, 'html.parser')
+
+    number_of_pages = ts_soup.find_all('a', {'class': 'paginationItem paginationLink'})
+    max_pages = max([page.text.strip() for page in number_of_pages])
+
+    all_ts_jobs = []
+    # Iterate through the pages. Two Sigma shows 10 jobs max per page.
+    for page, iternum in enumerate(range(int(max_pages))):
+        cur_page_soup = BeautifulSoup(ts_driver.page_source, 'html.parser')
+        jobs_on_page = cur_page_soup.find_all('li', {'class': 'jobResultItem'})
+        for job in jobs_on_page:
+            all_ts_jobs.append(job.find('a', {'class': 'mobileHide'}).text.strip())
+        if iternum < (int(max_pages) - 2):
+            next_button = ts_driver.find_element('xpath', '/html/body/div/div/div[2]/div/div[2]/div[1]/div[2]/a[4]')
+            WebDriverWait(ts_driver, 10).until(EC.element_to_be_clickable((next_button))).click()
+        # For some reason the xpath of the "next" button changes on the second to last page
+        # (the last page where "next" is clickable). Also, I am only able to figure out how to find
+        # the top "next" button on the page - I am having no luck finding the bottom "next" button
+        # with Selenium, which seems to stay put (no changing xpath) for all of the pages.
+        elif iternum == (int(max_pages) - 2):
+            next_button = ts_driver.find_element('xpath', '/html/body/div/div/div[2]/div/div[2]/div[1]/div[2]/a[6]')
+            WebDriverWait(ts_driver, 10).until(EC.element_to_be_clickable((next_button))).click()
+
+    ts_driver.close()
+
+    return all_ts_jobs
+
 
 def main():
     jobs_dict = {'hrt': {'company_name': 'Hudson River Trading',
@@ -280,7 +351,15 @@ def main():
                  'xtx': {'company_name': 'XTX Markets',
                          'todays_jobs': get_xtx_jobs()},
                  'worldquant': {'company_name': 'Worldquant',
-                                'todays_jobs': get_worldquant_jobs()}
+                                'todays_jobs': get_worldquant_jobs()},
+                 'pdt': {'company_name': "PDT Partners",
+                         'todays_jobs': get_pdt_jobs()},
+                 'bam': {'company_name': 'Balyasny Asset Management',
+                         'todays_jobs': get_bam_jobs()},
+                 'rentec': {'company_name': 'Renaissance Technologies',
+                            'todays_jobs': get_rentec_jobs()},
+                 'ts': {'company_name': 'Two Sigma',
+                        'todays_jobs': get_two_sigma_jobs()}
                  }
 
     today = datetime.now().strftime("%Y%m%d")
