@@ -1,6 +1,5 @@
-I have been searching for a new job in the NYC area, and had become annoyed by the amount of time it 
-took to look at the careers page of every company I am interested in and check if any new jobs had been
-posted. I sought to auotomate that process with this program.
+I have been searching for a new job in the NYC area, and realized I had been spending a bit too much time 
+checking various careers pages for any new jobs.  I sought to auotomate that process with this program.
 
 This program scrapes hedge funds/ trading companies/ asset managers/ etc. careers page with the goal
 of easily viewing if any new jobs had been posted.
