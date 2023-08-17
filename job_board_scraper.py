@@ -130,6 +130,7 @@ def get_millennium_jobs():
     return jobs
 
 def get_aqr_jobs():
+    """AQR Capital Management"""
     aqr_url = 'https://careers.aqr.com/jobs/city/greenwich#/'
     aqr_driver = webdriver_response(aqr_url)
 
@@ -146,6 +147,7 @@ def get_aqr_jobs():
 
 
 def get_squarepoint_jobs():
+    """Squarepoint Capital"""
     sqp_url = 'https://www.squarepoint-capital.com/careers#s4'
     sqp_driver = webdriver_response(sqp_url)
 
@@ -165,6 +167,7 @@ def get_squarepoint_jobs():
     return ny_jobs
 
 def get_iex_jobs():
+    """Investor's Exchange"""
     iex_url = 'https://www.iex.io/careers#open-roles'
     iex_driver = webdriver_response(iex_url)
     # Wait for jobs to load
@@ -177,6 +180,7 @@ def get_iex_jobs():
     return jobs
 
 def get_p72_jobs():
+    """Point 72 Asset Management"""
     p72_url = 'https://careers.point72.com/?location=new%20york'
     p72_driver = webdriver_response(p72_url)
     # Wait for jobs to load
@@ -189,6 +193,7 @@ def get_p72_jobs():
     return jobs
 
 def get_citsec_jobs():
+    """Citadel Securities"""
     citsec_url = 'https://www.citadelsecurities.com/careers/open-opportunities/positions-for-professionals/'
     citsec_driver = webdriver_response(citsec_url)
     # Wait for page to load
@@ -210,6 +215,7 @@ def get_citsec_jobs():
     return nyc_jobs
 
 def get_xtx_jobs():
+    """XTX Markets"""
     xtx_url = 'https://www.xtxmarkets.com'
     xtx_driver = webdriver_response(xtx_url)
     # Wait for page to load
@@ -226,6 +232,7 @@ def get_xtx_jobs():
     return nyc_job_titles
 
 def get_worldquant_jobs():
+    """Worldquant, LLC"""
     wq_url = 'https://www.worldquant.com/career-listing/?location=new-york-united-states&department='
     wq_driver = webdriver_response(wq_url)
     # Wait for page to load
@@ -245,6 +252,7 @@ def get_worldquant_jobs():
 
     ny_jobs = []
     for job in job_w_loc:
+
         # Some jobs location tag says "Multiple Locations", but the class
         # specifies all of the cities the job can be in. It likely would include
         # New York, but would need to check the website.
@@ -256,6 +264,7 @@ def get_worldquant_jobs():
     return ny_jobs
 
 def get_pdt_jobs():
+    """PDT Partners"""
     pdt_url = 'https://pdtpartners.com/careers'
     pdt_soup = soupify_response(pdt_url)
     jobs = pdt_soup.find_all('div', {'class': 'job'})
@@ -263,6 +272,7 @@ def get_pdt_jobs():
     return job_titles
 
 def get_bam_jobs():
+    """Balyasny Asset Management"""
     bam_url = 'https://bambusdev.my.site.com/s/'
     bam_driver = webdriver_response(bam_url)
     time.sleep(2)
@@ -278,6 +288,7 @@ def get_bam_jobs():
 
     ny_jobs = []
     for job in jobs_w_loc:
+
         # It is possible that "X Locations" will return jobs not in NY.
         # There doesn't seem to be a clear way to isolate NY if there are
         # multiple locations available.
@@ -289,6 +300,7 @@ def get_bam_jobs():
     return ny_jobs
 
 def get_rentec_jobs():
+    """Renaissance Technologies"""
     rentec_url = 'https://www.rentec.com/Careers.action?jobs=true'
     rentec_soup = soupify_response(rentec_url)
     rentec_jobs = rentec_soup.find_all('div', {'class': 'flex-auto'})
@@ -296,6 +308,7 @@ def get_rentec_jobs():
     return jobs
 
 def get_two_sigma_jobs():
+    """Two Sigma"""
     ts_url = 'https://careers.twosigma.com/careers/SearchJobs/?locationSearch=233%7C%7CNew%20York%7CNew%20York&listFilterMode=1&jobOffset=0'
     ts_driver = webdriver_response(ts_url)
     time.sleep(2)
@@ -305,6 +318,7 @@ def get_two_sigma_jobs():
     max_pages = max([page.text.strip() for page in number_of_pages])
 
     all_ts_jobs = []
+
     # Iterate through the pages. Two Sigma shows 10 jobs max per page.
     for page, iternum in enumerate(range(int(max_pages))):
         cur_page_soup = BeautifulSoup(ts_driver.page_source, 'html.parser')
@@ -314,6 +328,7 @@ def get_two_sigma_jobs():
         if iternum < (int(max_pages) - 2):
             next_button = ts_driver.find_element('xpath', '/html/body/div/div/div[2]/div/div[2]/div[1]/div[2]/a[4]')
             WebDriverWait(ts_driver, 10).until(EC.element_to_be_clickable((next_button))).click()
+
         # For some reason the xpath of the "next" button changes on the second to last page
         # (the last page where "next" is clickable). Also, I am only able to figure out how to find
         # the top "next" button on the page - I am having no luck finding the bottom "next" button
@@ -376,6 +391,7 @@ def main():
                 days_between = (datetime.strptime(last_check_date, "%Y%m%d") - datetime.strptime(today, "%Y%m%d")).days
                 days_between = days_between * -1 if days_between < 0 else days_between
             new_jobs = []
+
             # Only write to jobs file if program correctly loaded jobs from careers page
             if jobs_dict[company]['todays_jobs']:
                 with open(f".{company}", 'w') as new_file:
@@ -401,8 +417,10 @@ def main():
             new_co_string = f"Looks like this is the first day you're checking for " \
                             f"{jobs_dict[company]['company_name']}. Writing {len(jobs_dict[company]['todays_jobs'])} jobs to file. " \
                             "Check back tomorrow for new jobs!\n"
+
             # Print that this is a new company to the terminal
             print(new_co_string)
+
             # Write each companies job listings so program has something to compare against
             # on the next day it is run.
             new_jobs_file_text.append(new_co_string)
