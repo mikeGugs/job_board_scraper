@@ -341,6 +341,16 @@ def get_two_sigma_jobs():
 
     return all_ts_jobs
 
+def get_jump_jobs():
+    """Jump Trading"""
+    jump_url = 'https://www.jumptrading.com/careers/?locations=New-York'
+    jump_soup = soupify_response(jump_url)
+    jump_jobs = jump_soup.find_all('p', {'class': 'text-xl lg:text-2xl font-medium text-black group-hover:text-jump-red'})
+    locations = jump_soup.find_all('p', {'class': 'text-base lg:text-lg text-dark-gray group-hover:text-black'})
+    jobs_w_locations = dict(zip([job.text.strip() for job in jump_jobs], [location.text.strip() for location in locations]))
+    ny_jobs = [ny_job for ny_job in jobs_w_locations.keys() if 'New York' in jobs_w_locations[ny_job]]
+    return ny_jobs
+
 
 def main():
     jobs_dict = {'hrt': {'company_name': 'Hudson River Trading',
@@ -374,7 +384,9 @@ def main():
                  'rentec': {'company_name': 'Renaissance Technologies',
                             'todays_jobs': get_rentec_jobs()},
                  'ts': {'company_name': 'Two Sigma',
-                        'todays_jobs': get_two_sigma_jobs()}
+                        'todays_jobs': get_two_sigma_jobs()},
+                 'jump': {'company_name': 'Jump Trading',
+                          'todays_jobs': get_jump_jobs()}
                  }
 
     today = datetime.now().strftime("%Y%m%d")
