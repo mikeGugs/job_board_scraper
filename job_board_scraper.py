@@ -216,13 +216,15 @@ def get_citsec_jobs():
 
 def get_xtx_jobs():
     """XTX Markets"""
-    xtx_url = 'https://www.xtxmarkets.com'
+    xtx_url = 'https://www.xtxmarkets.com/#careers'
     xtx_driver = webdriver_response(xtx_url)
     # Wait for page to load
     time.sleep(2)
     xtx_soup = BeautifulSoup(xtx_driver.page_source, 'html.parser')
-    nyc_jobs = xtx_soup.find_all('li', {'class': 'opening_job_item active',
-                                        'data-tabs': "NEW YORK"})
+    jobs = xtx_soup.find_all('li', {'class': 'opening_job_item active'})
+
+    nyc_jobs = [job for job in jobs if 'New York' in job.text]
+
     nyc_job_titles = [job.find('div', {'class': 'title'}) for job in nyc_jobs]
 
     nyc_job_titles = [job.text.strip() for job in nyc_job_titles]
