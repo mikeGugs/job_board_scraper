@@ -57,7 +57,7 @@ def get_deshaw_jobs():
                                                 '2]/div/div[1]/div[3]/button')
     office_location.click()
     # Choose that I'm interested in the NY office
-    ny_office = webdriver.find_element('xpath', '//*[@id="LAYER_MID"]/div/div/main/div[1]/section[2]/div/div[1]/div[3]/ul/li[3]')
+    ny_office = webdriver.find_element('xpath', '//*[@id="LAYER_MID"]/div/div/main/div[1]/section[2]/div/div[1]/div[3]/ul/li[2]')
     ny_office.click()
     # Choose to view all jobs
     view_all_jobs = webdriver.find_element('xpath', '//*[@id="LAYER_MID"]/div/div/main/div[1]/section['
