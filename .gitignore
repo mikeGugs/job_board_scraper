@@ -1,4 +1,5 @@
 # company files
+.jump
 .hrt
 .deshaw
 .js
@@ -8,6 +9,14 @@
 .squarepoint
 .iex
 .p72
+.bam
+.citsec
+.idea/
+.pdt
+.rentec
+.ts
+.worldquant
+.xtx
 
 # other specific stuff
 geckodriver.log
