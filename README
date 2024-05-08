@@ -10,13 +10,3 @@ and it will be re-written each time you run the program.
 
 I am going to be consistently adding new companies to this, and may add new functionality/ features
 as I come up with them/ develop them.
-
-You will need to download the Firefox webdriver, geckodriver, into your $PATH. I put mine in /usr/bin. See below:
-https://github.com/mozilla/geckodriver/releases
-
-
-Known issues:
-	1) Sometimes the D.E. Shaw website will hang and this program wont be able to click the buttons it needs to.
-	This happens especially when you run this program more than once in quick succession. If this happens, try 
-	to simply rerun the program in a few seconds. If you ran the program more than once, then a waiting a 
-	longer period in between reruns might be helpful.
