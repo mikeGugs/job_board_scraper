@@ -1,28 +1,39 @@
-import requests
+import chromedriver_autoinstaller
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
 import time
+import re
 
-def soupify_response(url):
-    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) '
-                             'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 '
-                             'Safari/537.36'}
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
+def soupify_response(driver_response):
+    soup = BeautifulSoup(driver_response.page_source, 'html.parser')
     return soup
 
 def webdriver_response(url):
-    driver = webdriver.Firefox()
+    # install chrome driver
+    chromedriver_autoinstaller.install()
+
+    # Create a Selenium WebDriver
+    chrome_options = Options()
+    chrome_options.add_argument("--headless=new")
+    user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'
+    chrome_options.add_argument(f'user-agent={user_agent}')    
+    driver = webdriver.Chrome(options=chrome_options)
     driver.get(url)
+
     return driver
 
 def get_hrt_jobs():
     """Hudson River Trading"""
+    print("getting HRT jobs")
     hrt_url = 'https://www.hudsonrivertrading.com/careers/?_offices=New+York'
-    hrt_soup = soupify_response(hrt_url)
+    driver_response = webdriver_response(hrt_url)
+    hrt_soup = soupify_response(driver_response)
     nyc_job_data = hrt_soup.find_all('tr', {'class': 'job-row',
                                         'data-filter-hidden' :'false',
                                         'data-search-hidden': 'false'})
@@ -31,38 +42,38 @@ def get_hrt_jobs():
 
 def get_deshaw_jobs():
     """DE Shaw"""
+    print("Getting DE Shaw jobs")
     deshaw_url = 'https://www.deshaw.com/careers/choose-your-path'
     webdriver = webdriver_response(deshaw_url)
     # Wait until page scrolls down and job-board loads
-    WebDriverWait(webdriver, 30).until(EC.invisibility_of_element_located(('xpath',
-                                                                   "//*[@id='TemplateTransitionLayer']")))
+    time.sleep(2)
     # Wait until cookie-tracker loads
     WebDriverWait(webdriver, 10).until(
         EC.element_to_be_clickable(('xpath', '//*[@id="LAYER_COOKIE"]/section/div/div')))
     # Accept cookie-tracker
     accept_button = webdriver.find_element('class name', 'accept-button')
-    accept_button.click()
+    webdriver.execute_script("arguments[0].click();", accept_button)
     # Wait until experience level dropdown loads
     WebDriverWait(webdriver, 10).until(EC.element_to_be_clickable(('xpath', '//*[@id="LAYER_MID"]/div/div/main/div[1]/section['
                                                 '2]/div/div[1]/div[1]/button')))
     # Find experience level dropdown and click it
     profession_button = webdriver.find_element('xpath', '//*[@id="LAYER_MID"]/div/div/main/div[1]/section['
                                                 '2]/div/div[1]/div[1]/button')
-    profession_button.click()
+    webdriver.execute_script("arguments[0].click();", profession_button)
     # Choose that I am a "professional"
     choose_professional = webdriver.find_element('xpath', '/html/body/div[1]/div[4]/div/div/main/div[1]/section[2]/div/div[1]/div[1]/ul/li[2]')
-    choose_professional.click()
+    webdriver.execute_script("arguments[0].click();", choose_professional)
     # Find office location dropdown and click it
     office_location = webdriver.find_element('xpath', '//*[@id="LAYER_MID"]/div/div/main/div[1]/section['
                                                 '2]/div/div[1]/div[3]/button')
-    office_location.click()
+    webdriver.execute_script("arguments[0].click();", office_location)
     # Choose that I'm interested in the NY office
     ny_office = webdriver.find_element('xpath', '//*[@id="LAYER_MID"]/div/div/main/div[1]/section[2]/div/div[1]/div[3]/ul/li[2]')
-    ny_office.click()
+    webdriver.execute_script("arguments[0].click();", ny_office)
     # Choose to view all jobs
     view_all_jobs = webdriver.find_element('xpath', '//*[@id="LAYER_MID"]/div/div/main/div[1]/section['
                                                 '2]/div/div[2]/div[3]/div')
-    view_all_jobs.click()
+    webdriver.execute_script("arguments[0].click();", view_all_jobs)
 
     jobs_soup = BeautifulSoup(webdriver.page_source, 'html.parser')
     all_jobs = jobs_soup.find_all('span', {'class': None})
@@ -75,17 +86,19 @@ def get_deshaw_jobs():
 
 def get_js_jobs():
     """Jane Street"""
+    print("Getting JS Jobs")
     js_url = 'https://www.janestreet.com/join-jane-street/open-roles/?type=experienced-candidates&location=new-york'
     webdriver = webdriver_response(js_url)
     # Wait for jobs to load
     time.sleep(2)
     elements = webdriver.find_elements('xpath', '//div[@class="item experienced position"]')
     jobs = [element.text.strip() for element in elements if element.text.strip()]
-    webdriver.close()
+    webdriver.quit()
     return jobs
 
 def get_tower_jobs():
     """Tower Research Capital"""
+    print("Getting Tower jobs")
     tower_url = 'https://www.tower-research.com/open-positions'
     webdriver = webdriver_response(tower_url)
     # Wait for page to load
@@ -105,32 +118,32 @@ def get_tower_jobs():
 
 def get_millennium_jobs():
     """Millennium Management"""
-    millennium_url = 'https://www.mlp.com/job-listings/'
+    print("Getting Millennium jobs")
+    millennium_url = 'https://mlp.eightfold.ai/careers?location=New%20York%2C%20New%20York%2C%20United%20States%20of%20America&pid=755933841912&domain=mlp.com&sort_by=relevance&triggerGoButton=false&triggerGoButton=true'
     m_driver = webdriver_response(millennium_url)
-
-    # Try to wait until cookie tracker acceptance button is clickable
-    time.sleep(2)
-
-    # Again wait for cookie tracker. Maybe this isn't needed?
-    WebDriverWait(m_driver, 10).until(
-        EC.element_to_be_clickable(('xpath', '//*[@id="global_cookie_policy"]/div/div/a')))
-    # Accept cookie-tracker
-    accept_button = m_driver.find_element('xpath', '//*[@id="global_cookie_policy"]/div/div/a')
-    accept_button.click()
-
-    m_driver.find_element('xpath', '/html/body/div[4]/main/div/div/section/div')
+    show_more = m_driver.find_element(By.CLASS_NAME, 'show-more-positions')
+    # Need to click through all of the "Show More Positions" buttons to bring them all into view
+    while show_more:
+        m_driver.execute_script("arguments[0].click();", show_more)
+        time.sleep(3)
+        try:
+            show_more = m_driver.find_element(By.CLASS_NAME, 'show-more-positions')
+        except NoSuchElementException as e:
+            show_more = False
 
     m_soup = BeautifulSoup(m_driver.page_source, 'html.parser')
     jobs = []
-    for job_element in m_soup.find_all('li', {'class': 'page-section__content--list-container'}):
-        if 'New York' in job_element.text:
-            jobs.append(job_element.text.strip().split('\n')[0])
+    for job_element in m_soup.find_all('div', {'class': 'position-card'}):
+        position = job_element.find('div', {'class': 'position-title'}).text.strip()
+        location = job_element.find('p', {'class': 'position-location'}).text.strip()
+        jobs.append(position) if 'new york' in location.lower() else None
     m_driver.close()
 
     return jobs
 
 def get_aqr_jobs():
     """AQR Capital Management"""
+    print("Getting AQR Jobs")
     aqr_url = 'https://careers.aqr.com/jobs/city/greenwich#/'
     aqr_driver = webdriver_response(aqr_url)
 
@@ -148,26 +161,29 @@ def get_aqr_jobs():
 
 def get_squarepoint_jobs():
     """Squarepoint Capital"""
-    sqp_url = 'https://www.squarepoint-capital.com/careers#s4'
+    print("Getting Squarepoint jobs")
+    sqp_url = 'https://www.squarepoint-capital.com/careers'
     sqp_driver = webdriver_response(sqp_url)
 
+    open_positions_button = sqp_driver.find_element('xpath', '/html/body/div[2]/section[1]/div/a')
+    sqp_driver.execute_script("arguments[0].click();", open_positions_button)
+    time.sleep(2)
+
     sqp_soup = BeautifulSoup(sqp_driver.page_source, 'html.parser')
-    sqp_jobs = sqp_soup.find_all('p', {'class': 'positionName'})
-    sqp_locations = sqp_soup.find_all('p', {'class': 'positionLocation'})
+    sqp_jobs = sqp_soup.find_all('button', {'etype': re.compile(r'.*'),
+                                            'office': re.compile(r'.*[nN]ew\s[yY]ork.*')
+                                            }
+                                 )
 
-    if len(sqp_jobs) != len(sqp_locations):
-        raise IndexError("The amount of job and location tags for Squarepoint do not equal!"
-                         " They probably added a job without a corresponding location.")
-
-    sqp_jobs_w_locations = [(job.text, location.text) for job, location in zip(sqp_jobs, sqp_locations)]
-    ny_jobs = [job[0].strip() for job in sqp_jobs_w_locations if 'New York' in job[1]]
+    sqp_job_titles = [j.find('strong').text for j in sqp_jobs]
 
     sqp_driver.close()
 
-    return ny_jobs
+    return sqp_job_titles
 
 def get_iex_jobs():
     """Investor's Exchange"""
+    print("Getting IEX Jobs")
     iex_url = 'https://www.iex.io/careers#open-roles'
     iex_driver = webdriver_response(iex_url)
     # Wait for jobs to load
@@ -181,6 +197,7 @@ def get_iex_jobs():
 
 def get_p72_jobs():
     """Point 72 Asset Management"""
+    print("Getting Point 72 Jobs")
     p72_url = 'https://careers.point72.com/?location=new%20york'
     p72_driver = webdriver_response(p72_url)
     # Wait for jobs to load
@@ -194,6 +211,7 @@ def get_p72_jobs():
 
 def get_citsec_jobs():
     """Citadel Securities"""
+    print("Getting Citadel Securities' jobs")
     citsec_url = 'https://www.citadelsecurities.com/careers/open-opportunities/positions-for-professionals/'
     citsec_driver = webdriver_response(citsec_url)
     # Wait for page to load
@@ -216,6 +234,7 @@ def get_citsec_jobs():
 
 def get_xtx_jobs():
     """XTX Markets"""
+    print("Getting XTX jobs")
     xtx_url = 'https://www.xtxmarkets.com/#careers'
     xtx_driver = webdriver_response(xtx_url)
     # Wait for page to load
@@ -235,6 +254,7 @@ def get_xtx_jobs():
 
 def get_worldquant_jobs():
     """Worldquant, LLC"""
+    print("Getting WorldQuant Jobs")
     wq_url = 'https://www.worldquant.com/career-listing/?location=new-york-united-states&department='
     wq_driver = webdriver_response(wq_url)
     # Wait for page to load
@@ -267,14 +287,17 @@ def get_worldquant_jobs():
 
 def get_pdt_jobs():
     """PDT Partners"""
+    print("Getting PDT Partners' Jobs")
     pdt_url = 'https://pdtpartners.com/careers'
-    pdt_soup = soupify_response(pdt_url)
+    driver_response = webdriver_response(pdt_url)
+    pdt_soup = soupify_response(driver_response)
     jobs = pdt_soup.find_all('div', {'class': 'job'})
     job_titles = [job.find('a').text.strip() for job in jobs]
     return job_titles
 
 def get_bam_jobs():
     """Balyasny Asset Management"""
+    print("Getting Balyasny Jobs")
     bam_url = 'https://bambusdev.my.site.com/s/'
     bam_driver = webdriver_response(bam_url)
     time.sleep(2)
@@ -303,19 +326,21 @@ def get_bam_jobs():
 
 def get_rentec_jobs():
     """Renaissance Technologies"""
+    print("Getting Rentec Jobs")
     rentec_url = 'https://www.rentec.com/Careers.action?jobs=true'
-    rentec_soup = soupify_response(rentec_url)
+    driver_response = webdriver_response(rentec_url)
+    rentec_soup = soupify_response(driver_response)
     rentec_jobs = rentec_soup.find_all('div', {'class': 'flex-auto'})
-    jobs = [job.text.strip() for job in rentec_jobs if "Privacy Policy" not in job.text.strip()]
+    jobs = [job.text.strip() for job in rentec_jobs if "privacy policy" not in job.text.strip() if 'Privacy Policy' not in job.text.strip()]
     return jobs
 
 def get_two_sigma_jobs():
     """Two Sigma"""
+    print("Getting Two Sigma Jobs")
     ts_url = 'https://careers.twosigma.com/careers/SearchJobs/?locationSearch=233%7C%7CNew%20York%7CNew%20York&listFilterMode=1&jobOffset=0'
     ts_driver = webdriver_response(ts_url)
     time.sleep(2)
     ts_soup = BeautifulSoup(ts_driver.page_source, 'html.parser')
-
     number_of_pages = ts_soup.find_all('a', {'class': 'paginationItem paginationLink'})
     max_pages = max([page.text.strip() for page in number_of_pages])
 
@@ -327,17 +352,10 @@ def get_two_sigma_jobs():
         jobs_on_page = cur_page_soup.find_all('li', {'class': 'jobResultItem'})
         for job in jobs_on_page:
             all_ts_jobs.append(job.find('a', {'class': 'mobileHide'}).text.strip())
-        if iternum < (int(max_pages) - 2):
-            next_button = ts_driver.find_element('xpath', '/html/body/div/div/div[2]/div/div[2]/div[1]/div[2]/a[4]')
-            WebDriverWait(ts_driver, 10).until(EC.element_to_be_clickable((next_button))).click()
-
-        # For some reason the xpath of the "next" button changes on the second to last page
-        # (the last page where "next" is clickable). Also, I am only able to figure out how to find
-        # the top "next" button on the page - I am having no luck finding the bottom "next" button
-        # with Selenium, which seems to stay put (no changing xpath) for all of the pages.
-        elif iternum == (int(max_pages) - 2):
-            next_button = ts_driver.find_element('xpath', '/html/body/div/div/div[2]/div/div[2]/div[1]/div[2]/a[6]')
-            WebDriverWait(ts_driver, 10).until(EC.element_to_be_clickable((next_button))).click()
+        ts_url = f'https://careers.twosigma.com/careers/SearchJobs/?locationSearch=233%7C%7CNew%20York%7CNew%20York&listFilterMode=1&jobOffset={iternum + 1}0'
+        ts_driver = webdriver_response(ts_url)
+        time.sleep(1)
+        ts_soup = BeautifulSoup(ts_driver.page_source, 'html.parser')
 
     ts_driver.close()
 
@@ -345,8 +363,10 @@ def get_two_sigma_jobs():
 
 def get_jump_jobs():
     """Jump Trading"""
+    print("Getting Jump Trading Jobs")
     jump_url = 'https://www.jumptrading.com/careers/?locations=New-York'
-    jump_soup = soupify_response(jump_url)
+    driver_response = webdriver_response(jump_url)
+    jump_soup = soupify_response(driver_response)
     jump_jobs = jump_soup.find_all('p', {'class': 'text-xl lg:text-2xl font-medium text-black group-hover:text-jump-red'})
     locations = jump_soup.find_all('p', {'class': 'text-base lg:text-lg text-dark-gray group-hover:text-black'})
     jobs_w_locations = dict(zip([job.text.strip() for job in jump_jobs], [location.text.strip() for location in locations]))
