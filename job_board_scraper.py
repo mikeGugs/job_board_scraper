@@ -9,6 +9,8 @@ from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
 import time
 import re
+import sys
+import os
 
 def soupify_response(driver_response):
     soup = BeautifulSoup(driver_response.page_source, 'html.parser')
@@ -419,7 +421,7 @@ def main():
 
     for company in jobs_dict:
         try:
-            with open(f".{company}", 'r') as old_file:
+            with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), 'r') as old_file:
                 old_jobs = old_file.read().splitlines()
                 last_check_date = old_jobs[0]
                 days_between = (datetime.strptime(last_check_date, "%Y%m%d") - datetime.strptime(today, "%Y%m%d")).days
@@ -428,7 +430,7 @@ def main():
 
             # Only write to jobs file if program correctly loaded jobs from careers page
             if jobs_dict[company]['todays_jobs']:
-                with open(f".{company}", 'w') as new_file:
+                with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), 'w') as new_file:
                     new_file.write(f"{today}\n")
                     for job in jobs_dict[company]['todays_jobs']:
                         if job not in old_jobs:
@@ -458,13 +460,13 @@ def main():
             # Write each companies job listings so program has something to compare against
             # on the next day it is run.
             new_jobs_file_text.append(new_co_string)
-            with open(f".{company}", "w") as new_file:
+            with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), "w") as new_file:
                 new_file.write(f"{today}\n")
                 for job in jobs_dict[company]['todays_jobs']:
                     new_file.write(f"{job}\n")
 
     # Write new jobs to new_jobs file. Rewritten every time this program is run.
-    with open("new_jobs", 'w') as new_jobs_file:
+    with open(os.path.join(os.path.dirname(sys.argv[0]), 'new_jobs'), 'w') as new_jobs_file:
         new_jobs_file.write(f"New jobs as of {today}:\n")
         for row in new_jobs_file_text:
             new_jobs_file.write(row)
