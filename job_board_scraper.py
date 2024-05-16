@@ -41,6 +41,7 @@ def get_hrt_jobs():
                                         'data-filter-hidden' :'false',
                                         'data-search-hidden': 'false'})
     jobs = [job.find('span', {'class': 'job-title'}).text.strip() for job in nyc_job_data]
+    driver_response.quit()
     return jobs
 
 def get_deshaw_jobs():
@@ -83,7 +84,7 @@ def get_deshaw_jobs():
     all_jobs = [job.text.strip() for job in all_jobs if job.text.strip()]
     all_jobs = [job for job in all_jobs if 'Intern' not in job]
 
-    webdriver.close()
+    webdriver.quit()
 
     return all_jobs
 
@@ -115,7 +116,7 @@ def get_tower_jobs():
 
     jobs = [job.find('a').text.strip() for job in elements if job.find('a').text.strip()]
 
-    webdriver.close()
+    webdriver.quit()
 
     return jobs
 
@@ -140,7 +141,7 @@ def get_millennium_jobs():
         position = job_element.find('div', {'class': 'position-title'}).text.strip()
         location = job_element.find('p', {'class': 'position-location'}).text.strip()
         jobs.append(position) if 'new york' in location.lower() else None
-    m_driver.close()
+    m_driver.quit()
 
     return jobs
 
@@ -157,7 +158,7 @@ def get_aqr_jobs():
     # those are all departments. After this we are left with only job titles.
 
     greenwich_jobs = [job.text.strip() for job in greenwich_jobs if job.text.strip()][::2]
-    aqr_driver.close()
+    aqr_driver.quit()
 
     return greenwich_jobs
 
@@ -180,7 +181,7 @@ def get_squarepoint_jobs():
 
     sqp_job_titles = [j.find('strong').text for j in sqp_jobs]
 
-    sqp_driver.close()
+    sqp_driver.quit()
 
     return sqp_job_titles
 
@@ -195,7 +196,7 @@ def get_iex_jobs():
     jobs = iex_soup.find_all('div', {'fs-cmsfilter-field': 'title',
                                      'data-js': 'title'})
     jobs = [job.text.strip() for job in jobs]
-    iex_driver.close()
+    iex_driver.quit()
     return jobs
 
 def get_p72_jobs():
@@ -208,7 +209,7 @@ def get_p72_jobs():
     p72_soup = BeautifulSoup(p72_driver.page_source, 'html.parser')
     jobs = p72_soup.find_all('a', {'class': 'searchSite'})
     jobs = [job.text.strip() for job in jobs]
-    p72_driver.close()
+    p72_driver.quit()
 
     return jobs
 
@@ -231,7 +232,7 @@ def get_citsec_jobs():
 
     nyc_jobs = [job[0] for job in jobs_w_loc if 'New York' in job[1]]
 
-    citsec_driver.close()
+    citsec_driver.quit()
 
     return nyc_jobs
 
@@ -251,7 +252,7 @@ def get_xtx_jobs():
 
     nyc_job_titles = [job.text.strip() for job in nyc_job_titles]
 
-    xtx_driver.close()
+    xtx_driver.quit()
 
     return nyc_job_titles
 
@@ -284,7 +285,7 @@ def get_worldquant_jobs():
         if 'New York' in job[1] or 'Multiple Locations' in job[1]:
             ny_jobs.append(job[0].strip())
 
-    wq_driver.close()
+    wq_driver.quit()
 
     return ny_jobs
 
@@ -296,6 +297,7 @@ def get_pdt_jobs():
     pdt_soup = soupify_response(driver_response)
     jobs = pdt_soup.find_all('div', {'class': 'job'})
     job_titles = [job.find('a').text.strip() for job in jobs]
+    driver_response.quit()
     return job_titles
 
 def get_bam_jobs():
@@ -323,7 +325,7 @@ def get_bam_jobs():
         if 'New York' in job[1] or 'Locations' in job[1]:
             ny_jobs.append(job[0])
 
-    bam_driver.close()
+    bam_driver.quit()
 
     return ny_jobs
 
@@ -335,6 +337,7 @@ def get_rentec_jobs():
     rentec_soup = soupify_response(driver_response)
     rentec_jobs = rentec_soup.find_all('div', {'class': 'flex-auto'})
     jobs = [job.text.strip() for job in rentec_jobs if "privacy policy" not in job.text.strip() if 'Privacy Policy' not in job.text.strip()]
+    driver_response.quit()
     return jobs
 
 def get_two_sigma_jobs():
@@ -360,7 +363,7 @@ def get_two_sigma_jobs():
         time.sleep(1)
         ts_soup = BeautifulSoup(ts_driver.page_source, 'html.parser')
 
-    ts_driver.close()
+    ts_driver.quit()
 
     return all_ts_jobs
 
@@ -374,6 +377,7 @@ def get_jump_jobs():
     locations = jump_soup.find_all('p', {'class': 'text-base lg:text-lg text-dark-gray group-hover:text-black'})
     jobs_w_locations = dict(zip([job.text.strip() for job in jump_jobs], [location.text.strip() for location in locations]))
     ny_jobs = [ny_job for ny_job in jobs_w_locations.keys() if 'New York' in jobs_w_locations[ny_job]]
+    driver_response.quit()
     return ny_jobs
 
 
