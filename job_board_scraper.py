@@ -359,6 +359,7 @@ def get_two_sigma_jobs():
         for job in jobs_on_page:
             all_ts_jobs.append(job.find('a', {'class': 'mobileHide'}).text.strip())
         ts_url = f'https://careers.twosigma.com/careers/SearchJobs/?locationSearch=233%7C%7CNew%20York%7CNew%20York&listFilterMode=1&jobOffset={iternum + 1}0'
+        ts_driver.quit()
         ts_driver = webdriver_response(ts_url)
         time.sleep(1)
         ts_soup = BeautifulSoup(ts_driver.page_source, 'html.parser')
