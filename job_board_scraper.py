@@ -384,39 +384,39 @@ def get_jump_jobs():
 
 def main():
     jobs_dict = {'hrt': {'company_name': 'Hudson River Trading',
-                         'todays_jobs': get_hrt_jobs()},
+                         'todays_jobs': get_hrt_jobs},
                  'deshaw': {'company_name': 'D.E. Shaw',
-                            'todays_jobs': get_deshaw_jobs()},
+                            'todays_jobs': get_deshaw_jobs},
                  'js': {'company_name': 'Jane Street',
-                        'todays_jobs': get_js_jobs()},
+                        'todays_jobs': get_js_jobs},
                  'tower': {'company_name': 'Tower Research Capital',
-                           'todays_jobs': get_tower_jobs()},
+                           'todays_jobs': get_tower_jobs},
                  'millennium': {'company_name': 'Millennium',
-                                'todays_jobs': get_millennium_jobs()},
+                                'todays_jobs': get_millennium_jobs},
                  'aqr': {'company_name': 'AQR',
-                         'todays_jobs': get_aqr_jobs()},
+                         'todays_jobs': get_aqr_jobs},
                  'squarepoint': {'company_name': 'Sqaurepoint',
-                                 'todays_jobs': get_squarepoint_jobs()},
+                                 'todays_jobs': get_squarepoint_jobs},
                  'iex': {'company_name': "IEX",
-                         'todays_jobs': get_iex_jobs()},
+                         'todays_jobs': get_iex_jobs},
                  'p72': {'company_name': 'Point 72',
-                         'todays_jobs': get_p72_jobs()},
+                         'todays_jobs': get_p72_jobs},
                  'citsec': {'company_name': 'Citadel Securities',
-                            'todays_jobs': get_citsec_jobs()},
+                            'todays_jobs': get_citsec_jobs},
                  'xtx': {'company_name': 'XTX Markets',
-                         'todays_jobs': get_xtx_jobs()},
+                         'todays_jobs': get_xtx_jobs},
                  'worldquant': {'company_name': 'Worldquant',
-                                'todays_jobs': get_worldquant_jobs()},
+                                'todays_jobs': get_worldquant_jobs},
                  'pdt': {'company_name': "PDT Partners",
-                         'todays_jobs': get_pdt_jobs()},
+                         'todays_jobs': get_pdt_jobs},
                  'bam': {'company_name': 'Balyasny Asset Management',
-                         'todays_jobs': get_bam_jobs()},
+                         'todays_jobs': get_bam_jobs},
                  'rentec': {'company_name': 'Renaissance Technologies',
-                            'todays_jobs': get_rentec_jobs()},
+                            'todays_jobs': get_rentec_jobs},
                  'ts': {'company_name': 'Two Sigma',
-                        'todays_jobs': get_two_sigma_jobs()},
+                        'todays_jobs': get_two_sigma_jobs},
                  'jump': {'company_name': 'Jump Trading',
-                          'todays_jobs': get_jump_jobs()}
+                          'todays_jobs': get_jump_jobs}
                  }
 
     today = datetime.now().strftime("%Y%m%d")
@@ -426,6 +426,7 @@ def main():
     new_jobs_file_text = []
 
     for company in jobs_dict:
+        jobs_for_company = jobs_dict[company]['todays_jobs']()
         try:
             with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), 'r') as old_file:
                 old_jobs = old_file.read().splitlines()
@@ -435,10 +436,10 @@ def main():
             new_jobs = []
 
             # Only write to jobs file if program correctly loaded jobs from careers page
-            if jobs_dict[company]['todays_jobs']:
+            if jobs_for_company:
                 with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), 'w') as new_file:
                     new_file.write(f"{today}\n")
-                    for job in jobs_dict[company]['todays_jobs']:
+                    for job in jobs_for_company:
                         if job not in old_jobs:
                             new_jobs.append(job)
                         new_file.write(f"{job}\n")
@@ -457,7 +458,7 @@ def main():
 
         except FileNotFoundError:
             new_co_string = f"Looks like this is the first day you're checking for " \
-                            f"{jobs_dict[company]['company_name']}. Writing {len(jobs_dict[company]['todays_jobs'])} jobs to file. " \
+                            f"{jobs_dict[company]['company_name']}. Writing {len(jobs_for_company)} jobs to file. " \
                             "Check back tomorrow for new jobs!\n"
 
             # Print that this is a new company to the terminal
@@ -468,7 +469,7 @@ def main():
             new_jobs_file_text.append(new_co_string)
             with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), "w") as new_file:
                 new_file.write(f"{today}\n")
-                for job in jobs_dict[company]['todays_jobs']:
+                for job in jobs_for_company:
                     new_file.write(f"{job}\n")
 
     # Write new jobs to new_jobs file. Rewritten every time this program is run.
@@ -480,3 +481,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
