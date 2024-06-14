@@ -489,9 +489,6 @@ def main():
             # Write jobs to company specific file
             _write_company_jobs_file(company, jobs_for_company, today)
 
-        # Let RAM usage cool down
-        time.sleep(5)
-
     # write master new jobs file
     _write_new_jobs_file(new_jobs_file_text, today)
 
