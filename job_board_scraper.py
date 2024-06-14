@@ -382,6 +382,32 @@ def get_jump_jobs():
     return ny_jobs
 
 
+def _write_company_jobs_file(company:str, company_jobs: list, date: str, old_jobs=None):
+    # Write each companies job listings so program has something to compare against
+    # on the next day it is run.
+    # Leave old_jobs = None if a new company. If existing company, provide old jobs file
+    with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), "w") as new_file:
+        new_file.write(f"{date}\n")
+        if not old_jobs:
+            for job in company_jobs:
+                new_file.write(f"{job}\n")
+        else:
+            new_jobs = []
+            for job in company_jobs:
+                if job not in old_jobs:
+                    new_jobs.append(job)
+                new_file.write(f"{job}\n")
+            return new_jobs
+    return None
+
+def _write_new_jobs_file(new_jobs: list, date: str):
+    # Write new jobs to new_jobs file. Rewritten every time this program is run.
+    with open(os.path.join(os.path.dirname(sys.argv[0]), 'new_jobs'), 'w') as new_jobs_file:
+        new_jobs_file.write(f"New jobs as of {date}:\n")
+        for row in new_jobs:
+            new_jobs_file.write(row)    
+                
+
 def main():
     jobs_dict = {'hrt': {'company_name': 'Hudson River Trading',
                          'todays_jobs': get_hrt_jobs},
@@ -433,17 +459,12 @@ def main():
                 last_check_date = old_jobs[0]
                 days_between = (datetime.strptime(last_check_date, "%Y%m%d") - datetime.strptime(today, "%Y%m%d")).days
                 days_between = days_between * -1 if days_between < 0 else days_between
-            new_jobs = []
 
             # Only write to jobs file if program correctly loaded jobs from careers page
             if jobs_for_company:
-                with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), 'w') as new_file:
-                    new_file.write(f"{today}\n")
-                    for job in jobs_for_company:
-                        if job not in old_jobs:
-                            new_jobs.append(job)
-                        new_file.write(f"{job}\n")
+                new_jobs = _write_company_jobs_file(company, jobs_for_company, today, old_jobs)
             else:
+                new_jobs = []
                 print(f"WARNING: picked up 0 jobs for {company}. Not writing new file for {company}.\n")
 
             # Print new jobs to the terminal
@@ -463,20 +484,17 @@ def main():
 
             # Print that this is a new company to the terminal
             print(new_co_string)
-
-            # Write each companies job listings so program has something to compare against
-            # on the next day it is run.
+            # Add text to master file
             new_jobs_file_text.append(new_co_string)
-            with open(os.path.join(os.path.dirname(sys.argv[0]), f".{company}"), "w") as new_file:
-                new_file.write(f"{today}\n")
-                for job in jobs_for_company:
-                    new_file.write(f"{job}\n")
+            # Write jobs to company specific file
+            _write_company_jobs_file(company, jobs_for_company, today)
 
-    # Write new jobs to new_jobs file. Rewritten every time this program is run.
-    with open(os.path.join(os.path.dirname(sys.argv[0]), 'new_jobs'), 'w') as new_jobs_file:
-        new_jobs_file.write(f"New jobs as of {today}:\n")
-        for row in new_jobs_file_text:
-            new_jobs_file.write(row)
+        # Let RAM usage cool down
+        time.sleep(5)
+
+    # write master new jobs file
+    _write_new_jobs_file(new_jobs_file_text, today)
+
 
 
 if __name__ == "__main__":
