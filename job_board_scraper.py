@@ -439,8 +439,8 @@ def main():
                          'todays_jobs': get_bam_jobs},
                  'rentec': {'company_name': 'Renaissance Technologies',
                             'todays_jobs': get_rentec_jobs},
-                 'ts': {'company_name': 'Two Sigma',
-                        'todays_jobs': get_two_sigma_jobs},
+#                 'ts': {'company_name': 'Two Sigma',
+#                        'todays_jobs': get_two_sigma_jobs},
                  'jump': {'company_name': 'Jump Trading',
                           'todays_jobs': get_jump_jobs}
                  }
@@ -495,5 +495,5 @@ def main():
 
 
 if __name__ == "__main__":
+    # NEED TO FIX TWO SIGMA
     main()
-
